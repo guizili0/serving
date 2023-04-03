@@ -47,6 +47,7 @@ limitations under the License.
 #include <vector>
 
 #include "tensorflow/c/c_api.h"
+#include "tensorflow/c/c_api_experimental.h"
 #include "tensorflow/compiler/jit/flags.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/init_main.h"
@@ -323,6 +324,18 @@ int main(int argc, char** argv) {
     std::cout << "Failed to start server. Error: " << status << "\n";
     return -1;
   }
+
+  TF_Status* tf_status = TF_NewStatus();
+  std::string xpu_lib_path = "libitex_gpu_cc.so";
+  TF_LoadPluggableDeviceLibrary(xpu_lib_path.c_str(), tf_status);
+  TF_Code code = TF_GetCode(tf_status);
+  if ( code == TF_OK ) {
+    LOG(INFO) << "intel-extension-for-tensorflow load successfully!";
+  } else {
+    std::string status_msg(TF_Message(tf_status));
+    LOG(WARNING) << "Could not load intel-extension-for-tensorflow, please check! " << status_msg;
+  }
+
   server.WaitForTermination();
   return 0;
 }
